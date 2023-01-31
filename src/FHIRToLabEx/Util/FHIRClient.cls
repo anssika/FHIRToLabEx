@@ -1,4 +1,3 @@
-/// This implementation uses FHIR class model in logic and transformations
 Class FHIRToLabEx.Util.FHIRClient Extends (Ens.Host, Ens.Settings) [ ProcedureBlock ]
 {
 
@@ -10,9 +9,9 @@ Property FHIREndpointURL As %String [ InitialExpression = "/fhirtolabex/fhir/r4"
 
 Parameter SETTINGS = "FHIRResourceRepository:Basic,FHIREndpointURL:Basic";
 
-Method FHIRRequest(pRequestMethod As %String, pRequestPath As %String, pQueryString As %String = "", pBody As %DynamicObject = {$$$NULLOREF}) As HS.FHIRServer.Interop.Request
+Method FHIRRequest(pRequestMethod As %String, pRequestPath As %String, pQueryString As %String = "", pBody As %DynamicObject = {$$$NULLOREF}) As FHIRToLabEx.FHIRServer.Interop.Request
 {
-	#Dim tRequest As HS.FHIRServer.Interop.Request = ##class(HS.FHIRServer.Interop.Request).%New()
+	#Dim tRequest As FHIRToLabEx.FHIRServer.Interop.Request = ##class(FHIRToLabEx.FHIRServer.Interop.Request).%New()
 	Set tRequest.Request.SessionApplication = ..FHIREndpointURL
 	Set tRequest.Request.RequestMethod = pRequestMethod
 	Set tRequest.Request.RequestPath = pRequestPath
@@ -21,15 +20,13 @@ Method FHIRRequest(pRequestMethod As %String, pRequestPath As %String, pQueryStr
 	Set tRequest.Request.ResponseFormatCode = "JSON"
 
 	If ($IsObject(pBody)) {
-		Set tQuickStream = ##class(HS.SDA3.QuickStream).%New()
-		Do tQuickStream.Write(pBody.%ToJSON())
-		Set tRequest.QuickStreamId = tQuickStream.%Id()
+		Do tRequest.Payload.Write(pBody.%ToJSON())
 	}
 
 	Return tRequest
 }
 
-Method InvokeFHIR(pRequest As HS.FHIRServer.Interop.Request, Output pResponseBody As %DynamicObject = {$$$NULLOREF}, Output pResponse As HS.FHIRServer.Interop.Response = {$$$NULLOREF}) As %Status
+Method InvokeFHIR(pRequest As FHIRToLabEx.FHIRServer.Interop.Request, Output pResponseBody As %DynamicObject = {$$$NULLOREF}, Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response = {$$$NULLOREF}) As %Status
 {
 	#Dim tStatus As %Status = $$$OK
 
@@ -40,9 +37,8 @@ Method InvokeFHIR(pRequest As HS.FHIRServer.Interop.Request, Output pResponseBod
 		Return $$$ERROR($$$GeneralError, "Timeout when waiting for response from business host '" _ ..FHIRResourceRepository _ "' to request '" _ pRequest.Request.RequestPath _ "'")
 	}
 
-	If (pResponse.QuickStreamId '= "") {
-		#Dim tQuickStream As HS.SDA3.QuickStream = ##class(HS.SDA3.QuickStream).%OpenId(pResponse.QuickStreamId)
-		Set pResponseBody = {}.%FromJSON(tQuickStream)
+	If (pResponse.Payload.Size) {
+		Set pResponseBody = {}.%FromJSON(pResponse.Payload)
 	}
 
 	Return tStatus

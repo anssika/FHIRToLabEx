@@ -5,7 +5,7 @@ Class FHIRToLabEx.Process.FHIRPatientProcessor Extends (Ens.BusinessProcess, FHI
 /// Code system of the Patient identifier
 Parameter IDENTIFIERSYSTEM = "urn:oid:1.2.246.21";
 
-Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As HS.FHIRServer.Interop.Response) As %Status
+Method OnRequest(pRequest As FHIRToLabEx.FHIRServer.Interop.Request, Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response) As %Status
 {
 	#Dim tStatus As %Status = $$$OK
 
@@ -40,8 +40,7 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 	**	Get the Patient resource from incoming JSON stream & the identifier
 	*/
 
-	#Dim tQuickStream As HS.SDA3.QuickStream = ##class(HS.SDA3.QuickStream).%OpenId(pRequest.QuickStreamId)
-	#Dim tPatient As %DynamicObject = {}.%FromJSON(tQuickStream)
+	#Dim tPatient As %DynamicObject = {}.%FromJSON(pRequest.Payload)
 	#Dim tPatientIdentifier As %String = ""
 	#Dim i As %Integer = 0
 	While (tPatient.identifier.%Get(i) '= "") {
@@ -55,7 +54,7 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 	If (tPatientIdentifier = "") {
 		// No patient identifier
 		Set tStatus = ##class(FHIRToLabEx.Util.FHIRMessage).FHIRServerInteropResponseError(.pResponse, 400,, "Identifier missing", "The Patient resource does not have any identifier with code system " _ ..#IDENTIFIERSYSTEM)
-		If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+		//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 		Return tStatus
 	}
 
@@ -79,12 +78,12 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 	*/
 	$$$LOGINFO("Saving Patient in local FHIR repository ...")
 	Set tStatus = ..InvokeFHIR(pRequest,, .pResponse)
-	If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+	//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 
 	Return tStatus
 }
 
-Method ProcessDELETE(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As HS.FHIRServer.Interop.Response) As %Status
+Method ProcessDELETE(pRequest As FHIRToLabEx.FHIRServer.Interop.Request, Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response) As %Status
 {
 	#Dim tStatus As %Status = $$$OK
 
@@ -97,19 +96,19 @@ Method ProcessDELETE(pRequest As HS.FHIRServer.Interop.Request, Output pResponse
 
 	If (tBundle.total > 0) {
 		Set tStatus = ##class(FHIRToLabEx.Util.FHIRMessage).FHIRServerInteropResponseError(.pResponse, 400,, "Patient is referred to", "The Patient with id " _ tId _ " is referred to in ServiceRequest resource(s)")
-		If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+		//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 		Return tStatus
 	}
 
 	$$$LOGINFO("Deleting the Patient in local FHIR repository ...")
 	Set tStatus = ..InvokeFHIR(pRequest,, .pResponse)
-	If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+	//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 
 	Return tStatus
 }
 
 /// Returns true, if the POST interaction is ok
-Method CheckPOST(pIdentifier As %String, Output pResponse As HS.FHIRServer.Interop.Response, Output pStatus As %Status = {$$$OK}) As %Boolean
+Method CheckPOST(pIdentifier As %String, Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response, Output pStatus As %Status = {$$$OK}) As %Boolean
 {
 	#Dim tBundle As %DynamicObject = $$$NULLOREF
 	Set pStatus = ..InvokeFHIR(..FHIRRequest("GET", "Patient", "identifier=" _ pIdentifier), .tBundle)
@@ -117,13 +116,14 @@ Method CheckPOST(pIdentifier As %String, Output pResponse As HS.FHIRServer.Inter
 
 	If (tBundle.total > 0) {
 		Set pStatus = ##class(FHIRToLabEx.Util.FHIRMessage).FHIRServerInteropResponseError(.pResponse, 400,, "Patient already exists", "A Patient resource with identifier " _ pIdentifier _ " already exists")
-		Do ..HSTraceResponse(pResponse)
+		//Do ..HSTraceResponse(pResponse)
 		Return 0
 	}
 
 	Return 1
 }
 
+/*
 Method HSTraceResponse(pResponse As HS.FHIRServer.Interop.Response)
 {
 	If $$$HSTRACING {
@@ -135,7 +135,7 @@ Method HSTraceResponse(pResponse As HS.FHIRServer.Interop.Response)
 		}
 	}
 }
-
+*/
 Storage Default
 {
 <Data name="FHIRPatientProcessorDefaultData">

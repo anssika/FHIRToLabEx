@@ -53,7 +53,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 /// By default, this base name is appended with a string
 /// describing the content of the file (classes, CSP pages, business rules etc.)
 /// and extension ".xml"
-Parameter FILENAME As %String = "FHIRToLabEx_2022_11_29";
+Parameter FILENAME As %String = "FHIRToLabEx_2023_01_31";
 
 /// Folder to create the export files in, when running this program in Windows.
 /// Specify an absolute path and end it with "\"
@@ -66,7 +66,8 @@ Parameter WINDOWSFOLDER As %String = "Z:\akauppi On My Mac\CacheExports";
 /// Folder to create the export files in, when running this program in Unix/Linux.
 /// Specify an absolute path and end it with "/"
 /// Parameter UNIXFOLDER As %String = "/Users/anssikauppi/CacheExports/";
-Parameter UNIXFOLDER As %String = "/external/export";
+/// Parameter UNIXFOLDER As %String = "/external/export";
+Parameter UNIXFOLDER As %String = "/durable/export";
 
 /// Comma separated list of beginnings of package names.
 /// All classes that start with any of these strings will be exported.

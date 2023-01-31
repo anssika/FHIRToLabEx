@@ -1,11 +1,11 @@
 Class FHIRToLabEx.Util.FHIRMessage
 {
 
-ClassMethod FHIRServerInteropResponseError(Output pResponse As HS.FHIRServer.Interop.Response, pHTTPStatusCode As %String, pSeverity As %String = "error", pCode As %String = "", pDetails As %String = "") As %Status
+ClassMethod FHIRServerInteropResponseError(Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response, pHTTPStatusCode As %String, pSeverity As %String = "error", pCode As %String = "", pDetails As %String = "") As %Status
 {
 	#Dim tStatus As %Status = $$$OK
 
-	Set pResponse = ##class(HS.FHIRServer.Interop.Response).%New()
+	Set pResponse = ##class(FHIRToLabEx.FHIRServer.Interop.Response).%New()
 	Set pResponse.Response = ##class(HS.FHIRServer.API.Data.Response).%New()
 	Set pResponse.Response.Status = pHTTPStatusCode
 	Set pResponse.Response.ResponseFormatCode = "JSON"
@@ -31,9 +31,7 @@ ClassMethod FHIRServerInteropResponseError(Output pResponse As HS.FHIRServer.Int
 			Set tOperationOutcome.issue.GetAt(1).details.text = pDetails
 		}
 
-		#Dim tQuickStream = ##class(HS.SDA3.QuickStream).%New()
-		Do tQuickStream.CopyFrom(tOperationOutcome.ToJSON())
-		Set pResponse.QuickStreamId = tQuickStream.%Id()
+		Do pResponse.Payload.CopyFrom(tOperationOutcome.ToJSON())
 	}
 
 	Return $$$OK

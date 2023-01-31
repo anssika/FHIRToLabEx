@@ -7,7 +7,7 @@ Property TargetConfigName As Ens.DataType.ConfigName [ InitialExpression = "To_L
 
 Parameter SETTINGS = "TargetConfigName:Basic";
 
-Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As HS.FHIRServer.Interop.Response) As %Status
+Method OnRequest(pRequest As FHIRToLabEx.FHIRServer.Interop.Request, Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response) As %Status
 {
 	#Dim tStatus As %Status = $$$OK
 
@@ -43,8 +43,7 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 	**	Get the ServiceRequest resource from incoming JSON stream
 	*/
 
-	#Dim tQuickStream As HS.SDA3.QuickStream = ##class(HS.SDA3.QuickStream).%OpenId(pRequest.QuickStreamId)
-	#Dim tServiceRequest As %DynamicObject = {}.%FromJSON(tQuickStream)
+	#Dim tServiceRequest As %DynamicObject = {}.%FromJSON(pRequest.Payload)
 
 	/* ********************************************************************************
 	**	If POST:
@@ -60,13 +59,13 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 
 			If (tBundle.total > 0) {
 				Set tStatus = ##class(FHIRToLabEx.Util.FHIRMessage).FHIRServerInteropResponseError(.pResponse, 400,, "ServiceRequest already exists", "A ServiceRequest resource with identifier " _ tIdentifier _ " already exists")
-				Do ..HSTraceResponse(pResponse)
+				//Do ..HSTraceResponse(pResponse)
 				Return tStatus
 			}
 		}
 		Else {	
 			Set tStatus = ##class(FHIRToLabEx.Util.FHIRMessage).FHIRServerInteropResponseError(.pResponse, 400,, "Identifier missing", "The ServiceRequest resource does not have any identifier")
-			If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+			//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 			Return tStatus
 		}
 	}
@@ -83,13 +82,13 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 
 		If ('$IsObject(tPatient)) {
 			Set tStatus = $$$ERROR($$$GeneralError, "Patient '" _ tServiceRequest.subject.reference _ "' not known (not found in FHIR resource repository)")
-			If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+			//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 			Return tStatus
 		}
 	}
 	Else {
 		Set tStatus = $$$ERROR($$$GeneralError, "No patient reference found (subject.reference is empty or does not exist)")
-		If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+		//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 		Return tStatus
 	}
 
@@ -128,7 +127,7 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 	// Patient resource to PID segment - see https://www.hl7.org/fhir/patient-mappings.html#v2
 	If ($IsObject(tPatient)) {
 		#Dim tHL7Segment As EnsLib.HL7.Segment
-		Set tStatus = ##class(EskoI.FromCore.ToHL7v2.General.Transform.FromPatientToPIDSegment).Transform(tPatient, .tHL7Segment)
+		Set tStatus = ##class(FHIRToLabEx.Transform.ToHL7v2.FromPatientToPIDSegment).Transform(tPatient, .tHL7Segment)
 		If ($$$ISERR(tStatus)) Return tStatus
 
 		Set tStatus = tHL7Message.SetSegmentAt(tHL7Segment, "PIDgrp.PID")
@@ -147,12 +146,12 @@ Method OnRequest(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As 
 	*/
 	$$$LOGINFO("Sending HL7 v2 message...")
 	Set tStatus = ..SendRequestAsync(..TargetConfigName, tHL7Message, 0)
-	If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+	//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 
 	Return tStatus
 }
 
-Method ProcessDELETE(pRequest As HS.FHIRServer.Interop.Request, Output pResponse As HS.FHIRServer.Interop.Response) As %Status
+Method ProcessDELETE(pRequest As FHIRToLabEx.FHIRServer.Interop.Request, Output pResponse As FHIRToLabEx.FHIRServer.Interop.Response) As %Status
 {
 	#Dim tStatus As %Status = $$$OK
 
@@ -165,17 +164,18 @@ Method ProcessDELETE(pRequest As HS.FHIRServer.Interop.Request, Output pResponse
 
 	If (tBundle.total > 0) {
 		Set tStatus = ##class(FHIRToLabEx.Util.FHIRMessage).FHIRServerInteropResponseError(.pResponse, 400,, "ServiceRequest is referred to", "The ServiceRequest with id " _ tId _ " is referred to in DiagnosticReport resource(s)")
-		If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+		//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 		Return tStatus
 	}
 
 	$$$LOGINFO("Deleting the ServiceRequest in local FHIR repository ...")
 	Set tStatus = ..InvokeFHIR(pRequest,, .pResponse)
-	If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
+	//If ($$$ISOK(tStatus)) Do ..HSTraceResponse(pResponse)
 
 	Return tStatus
 }
 
+/* Todo
 Method HSTraceResponse(pResponse As HS.FHIRServer.Interop.Response)
 {
 	If $$$HSTRACING {
@@ -187,7 +187,7 @@ Method HSTraceResponse(pResponse As HS.FHIRServer.Interop.Response)
 		}
 	}
 }
-
+*/
 Storage Default
 {
 <Data name="FHIRServiceRequestProcessorDefaultData">

@@ -96,6 +96,19 @@ ClassMethod OnBody() As %Status
 /// Returns the count ServiceRequest resources found
 ClassMethod GetRequests(Output pBundle As %DynamicObject, pQueryString As %String = "") As %Integer
 {
+	#Dim tRequest As FHIRToLabEx.FHIRServer.Interop.Request
+	Set tRequest = ..FHIRRequest("GET", "ServiceRequest", pQueryString)
+	#Dim tResponse As FHIRToLabEx.FHIRServer.Interop.Response = ..InvokeFHIR(tRequest, .pBundle)
+	If ($IsObject($Get(pBundle))) {
+		Return pBundle.total
+	}
+
+	Return 0
+}
+
+/// Returns the count ServiceRequest resources found
+ClassMethod GetRequestsOld(Output pBundle As %DynamicObject, pQueryString As %String = "") As %Integer
+{
 	#Dim tRequest As HS.FHIRServer.Interop.Request
 	Set tRequest = ..FHIRRequest("GET", "ServiceRequest", pQueryString)
 	#Dim tResponse As HS.FHIRServer.Interop.Response = ..InvokeFHIR(tRequest, .pBundle)
@@ -291,6 +304,19 @@ ClassMethod ListPatients()
 /// Returns the count Patient resources found
 ClassMethod GetPatients(Output pBundle As %DynamicObject, pQueryString As %String = "") As %Integer
 {
+	#Dim tRequest As FHIRToLabEx.FHIRServer.Interop.Request
+	Set tRequest = ..FHIRRequest("GET", "Patient", pQueryString)
+	#Dim tResponse As FHIRToLabEx.FHIRServer.Interop.Response = ..InvokeFHIR(tRequest, .pBundle)
+	If ($IsObject($Get(pBundle))) {
+		Return pBundle.total
+	}
+
+	Return 0
+}
+
+/// Returns the count Patient resources found
+ClassMethod GetPatientsOld(Output pBundle As %DynamicObject, pQueryString As %String = "") As %Integer
+{
 	#Dim tRequest As HS.FHIRServer.Interop.Request
 	Set tRequest = ..FHIRRequest("GET", "Patient", pQueryString)
 	#Dim tResponse As HS.FHIRServer.Interop.Response = ..InvokeFHIR(tRequest, .pBundle)
@@ -304,6 +330,18 @@ ClassMethod GetPatients(Output pBundle As %DynamicObject, pQueryString As %Strin
 /// Returns the count DiagnosticReport resources found
 ClassMethod GetResults(Output pBundle As %DynamicObject, pQueryString As %String = "") As %Integer
 {
+	#Dim tRequest As FHIRToLabEx.FHIRServer.Interop.Request
+	Set tRequest = ..FHIRRequest("GET", "DiagnosticReport", pQueryString)
+	#Dim tResponse As FHIRToLabEx.FHIRServer.Interop.Response = ..InvokeFHIR(tRequest, .pBundle)
+	If ($IsObject($Get(pBundle))) {
+		Return pBundle.total
+	}
+
+	Return 0
+}
+
+ClassMethod GetResultsOld(Output pBundle As %DynamicObject, pQueryString As %String = "") As %Integer
+{
 	#Dim tRequest As HS.FHIRServer.Interop.Request
 	Set tRequest = ..FHIRRequest("GET", "DiagnosticReport", pQueryString)
 	#Dim tResponse As HS.FHIRServer.Interop.Response = ..InvokeFHIR(tRequest, .pBundle)
@@ -314,7 +352,30 @@ ClassMethod GetResults(Output pBundle As %DynamicObject, pQueryString As %String
 	Return 0
 }
 
-ClassMethod InvokeFHIR(pRequest As HS.FHIRServer.Interop.Request, Output pResponseBody As %DynamicObject = {$$$NULLOREF}) As HS.FHIRServer.Interop.Response
+ClassMethod InvokeFHIR(pRequest As FHIRToLabEx.FHIRServer.Interop.Request, Output pResponseBody As %DynamicObject = {$$$NULLOREF}) As FHIRToLabEx.FHIRServer.Interop.Response
+{
+	#Dim tStatus As %Status = $$$OK
+
+	#Dim tService As FHIRToLabEx.Util.Service
+	Set tStatus = ##class(Ens.Director).CreateBusinessService("FHIRToLabEx.Util.Service", .tService)
+	If ($$$ISERR(tStatus)) Throw ##class(%Exception.StatusException).CreateFromStatus(tStatus)
+
+ 	#Dim tResponse As FHIRToLabEx.FHIRServer.Interop.Response
+	Set tStatus = tService.ProcessInput(pRequest, .tResponse)
+	If ($$$ISERR(tStatus)) Throw ##class(%Exception.StatusException).CreateFromStatus(tStatus)
+
+	If ('$IsObject(tResponse)) {
+		Throw ##class(%Exception.General).%New("ERROR", "2022",, "Timeout when waiting for response from business host '" _ tService.TargetConfigName _ "' to request '" _ pRequest.Request.RequestPath _ "'")
+	}
+
+	If ($IsObject(tResponse.Payload) && (tResponse.Payload.Size)) {
+		Set pResponseBody = {}.%FromJSON(tResponse.Payload)
+	}
+
+	Return tResponse
+}
+
+ClassMethod InvokeFHIROld(pRequest As HS.FHIRServer.Interop.Request, Output pResponseBody As %DynamicObject = {$$$NULLOREF}) As HS.FHIRServer.Interop.Response
 {
 	#Dim tStatus As %Status = $$$OK
 
@@ -338,7 +399,24 @@ ClassMethod InvokeFHIR(pRequest As HS.FHIRServer.Interop.Request, Output pRespon
 	Return tResponse
 }
 
-ClassMethod FHIRRequest(pRequestMethod As %String, pRequestPath As %String, pQueryString As %String = "", pBody As %DynamicObject = {$$$NULLOREF}) As HS.FHIRServer.Interop.Request
+ClassMethod FHIRRequest(pRequestMethod As %String, pRequestPath As %String, pQueryString As %String = "", pBody As %DynamicObject = {$$$NULLOREF}) As FHIRToLabEx.FHIRServer.Interop.Request
+{
+	#Dim tRequest As FHIRToLabEx.FHIRServer.Interop.Request = ##class(FHIRToLabEx.FHIRServer.Interop.Request).%New()
+	Set tRequest.Request.SessionApplication = ..#FHIRENDPOINTURL
+	Set tRequest.Request.RequestMethod = pRequestMethod
+	Set tRequest.Request.RequestPath = pRequestPath
+	Set tRequest.Request.QueryString = pQueryString
+	Set tRequest.Request.RequestFormatCode = "JSON"
+	Set tRequest.Request.ResponseFormatCode = "JSON"
+
+	If ($IsObject(pBody)) {
+		Do tRequest.Payload.Write(pBody.%ToJSON())
+	}
+
+	Return tRequest
+}
+
+ClassMethod FHIRRequestOld(pRequestMethod As %String, pRequestPath As %String, pQueryString As %String = "", pBody As %DynamicObject = {$$$NULLOREF}) As HS.FHIRServer.Interop.Request
 {
 	#Dim tRequest As HS.FHIRServer.Interop.Request = ##class(HS.FHIRServer.Interop.Request).%New()
 	Set tRequest.Request.SessionApplication = ..#FHIRENDPOINTURL

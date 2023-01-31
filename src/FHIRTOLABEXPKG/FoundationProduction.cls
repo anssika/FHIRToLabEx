@@ -14,7 +14,7 @@ XData ProductionDefinition
     <Setting Target="Host" Name="BusinessRuleName">FHIRToLabEx.Rule.FHIRRequestRouter</Setting>
     <Setting Target="Host" Name="ResponseFrom">FHIRInteractionNotSupported,FHIRResourceRepository,FHIRServiceRequestProcessor,FHIRPatientProcessor</Setting>
   </Item>
-  <Item Name="From_FHIR_API" Category="From_PatientSystem,Solution" ClassName="HS.FHIRServer.Interop.Service" PoolSize="0" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  <Item Name="From_FHIR_API" Category="From_PatientSystem,Solution" ClassName="FHIRToLabEx.FHIRServer.Interop.Service" PoolSize="0" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
     <Setting Target="Host" Name="TargetConfigName">FHIRRequestRouter</Setting>
     <Setting Target="Host" Name="TraceOperations">*FULL*</Setting>
   </Item>
@@ -23,12 +23,12 @@ XData ProductionDefinition
   </Item>
   <Item Name="FHIRInteractionNotSupported" Category="From_PatientSystem,Solution" ClassName="FHIRToLabEx.Process.FHIRInteractionNotSupported" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
   </Item>
-  <Item Name="FHIRResourceRepository" Category="From_PatientSystem,Solution,From_LIS" ClassName="HS.FHIRServer.Interop.Operation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  <Item Name="FHIRResourceRepository" Category="From_PatientSystem,Solution,From_LIS" ClassName="FHIRToLabEx.FHIRServer.Interop.Operation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
     <Setting Target="Host" Name="TraceOperations">*FULL*</Setting>
   </Item>
-  <Item Name="Null" Category="TestEnv" ClassName="FHIRToLabEx.Process.Null" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  <Item Name="Null" Category="Etc" ClassName="FHIRToLabEx.Process.Null" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
   </Item>
-  <Item Name="From_Test" Category="TestEnv" ClassName="EnsLib.HL7.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  <Item Name="From_Test" Category="Etc" ClassName="EnsLib.HL7.Service.FileService" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
     <Setting Target="Host" Name="MessageSchemaCategory">2.3</Setting>
     <Setting Target="Host" Name="TargetConfigNames">Null</Setting>
     <Setting Target="Adapter" Name="FileSpec">*</Setting>
